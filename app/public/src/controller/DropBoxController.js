@@ -248,7 +248,6 @@ class DropBoxController {
                     </svg>
         `;
         break;
-
       case 'video/mp4':
       case 'video/x-msvideo':
       case 'video/mpeg':
@@ -293,7 +292,6 @@ class DropBoxController {
                 </g>
             </svg>`;
         break;
-
       case 'application/pdf':
       case 'application/x-pkcs12':
         return `<svg version="1.1" id="Camada_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"  width="160px" height="160px" viewBox="0 0 160 160" enable-background="new 0 0 160 160" xml:space="preserve">
