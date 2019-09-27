@@ -19,7 +19,7 @@ class DropBoxController {
 
   connectFirebase() {
     // Your web app's Firebase configuration
-    var config = {
+    const config = {
       apiKey: 'AIzaSyAIOEmmPd9U117m4NqTDBaemICc4_R2UNI',
       authDomain: 'dropbox-clone-2f9d6.firebaseapp.com',
       databaseURL: 'https://dropbox-clone-2f9d6.firebaseio.com',
@@ -27,11 +27,11 @@ class DropBoxController {
       storageBucket: '',
       messagingSenderId: '647693228515',
       appId: '1:647693228515:web:083399c49eea632d85e8d6',
-      measurementId: 'G-ZNP7X7LQ9W'
+      measurementId: 'G-ZNP7X7LQ9W',
     };
     // Initialize Firebase
     firebase.initializeApp(config);
-    //firebase.analytics();
+    // firebase.analytics();
   }
 
   getSelection() {
@@ -39,12 +39,12 @@ class DropBoxController {
   }
 
   removeTask() {
-    let promises = [];
+    const promises = [];
     this.getSelection().forEach((li) => {
-      let file = JSON.parse(li.dataset.file);
-      let key = li.dataset.key;
+      const file = JSON.parse(li.dataset.file);
+      const {key} = li.dataset;
 
-      let formData = new FormData();
+      const formData = new FormData();
 
       formData.append('path', file.path);
       formData.append('key', key);
@@ -72,11 +72,11 @@ class DropBoxController {
     });
 
     this.btnRename.addEventListener('click', (e) => {
-      let li = this.getSelection()[0];
+      const li = this.getSelection()[0];
 
-      let file = JSON.parse(li.dataset.file);
+      const file = JSON.parse(li.dataset.file);
 
-      let name = prompt('Renomear o arquivo:', file.name);
+      const name = prompt('Renomear o arquivo:', file.name);
 
       if (name) {
         file.name = name;
@@ -140,7 +140,7 @@ class DropBoxController {
     this.snackModalEl.style.display = show ? 'block' : 'none';
   }
 
-  ajax(url, method = 'GET', formData = new FormData(), onprogress = function() {}, onloadstart = function() {}) {
+  ajax(url, method = 'GET', formData = new FormData(), onprogress = () => {}, onloadstart = () => {}) {
     return new Promise((resolve, reject) => {
       let ajax;
       try {
@@ -153,7 +153,7 @@ class DropBoxController {
       ajax.open(method, url);
 
       ajax.onload = (event) => {
-        //this.modalShow(false);
+        // this.modalShow(false);
         try {
           // console.log(ajax.responseText);
           resolve(JSON.parse(ajax.responseText));
@@ -163,7 +163,7 @@ class DropBoxController {
       };
 
       ajax.onerror = (event) => {
-        //this.modalShow(false);
+        // this.modalShow(false);
         reject(event);
       };
 
@@ -176,9 +176,9 @@ class DropBoxController {
   }
 
   uploadTask(files) {
-    let promises = [];
+    const promises = [];
     [...files].forEach((file) => {
-      let formData = new FormData();
+      const formData = new FormData();
 
       formData.append('input-file', file);
 
@@ -201,28 +201,28 @@ class DropBoxController {
   }
 
   uploadProgress(event, file) {
-    //console.log(event.file);
+    // console.log(event.file);
 
-    let timespent = Date.now() - this.startUploadTime;
+    const timespent = Date.now() - this.startUploadTime;
 
-    let loaded = event.loaded;
-    let total = event.total;
+    const {loaded} = event;
+    const {total} = event;
 
-    let porcent = parseInt((loaded / total) * 100);
-    let timeleft = ((100 - porcent) * timespent) / porcent;
+    const porcent = parseInt((loaded / total) * 100, 10);
+    const timeleft = ((100 - porcent) * timespent) / porcent;
 
     this.progressBarEl.style.width = `${porcent}%`;
 
     this.filenameEl.innerHTML = file.name;
     this.timeleftEl.innerHTML = this.formatTimetoHuman(timeleft);
 
-    //console.log(timespent, timeleft, porcent);
+    // console.log(timespent, timeleft, porcent);
   }
 
   formatTimetoHuman(duration) {
-    let seconds = parseInt((duration / 1000) % 60);
-    let minutes = parseInt((duration / (1000 * 60)) % 60);
-    let hours = parseInt((duration / (1000 * 60 * 60)) % 24);
+    const seconds = parseInt((duration / 1000) % 60, 10);
+    const minutes = parseInt((duration / (1000 * 60)) % 60, 10);
+    const hours = parseInt((duration / (1000 * 60 * 60)) % 24, 10);
 
     if (hours > 0) {
       return `${hours} horas, ${minutes} minutos e ${seconds} segundos`;
@@ -394,7 +394,7 @@ class DropBoxController {
   }
 
   getFileView(file, key) {
-    let li = document.createElement('li');
+    const li = document.createElement('li');
 
     li.dataset.key = key;
     li.dataset.file = JSON.stringify(file);
@@ -410,19 +410,19 @@ class DropBoxController {
   initEventsLi(li) {
     li.addEventListener('click', (e) => {
       if (e.shiftKey) {
-        let firstLi = this.listFilesEl.querySelector('li.selected');
+        const firstLi = this.listFilesEl.querySelector('li.selected');
         if (firstLi) {
           let indexStart;
           let indexEnd;
 
-          let lis = li.parentElement.childNodes;
+          const lis = li.parentElement.childNodes;
 
           lis.forEach((el, index) => {
             if (firstLi === el) indexStart = index;
             if (li === el) indexEnd = index;
           });
 
-          let index = [indexStart, indexEnd].sort();
+          const index = [indexStart, indexEnd].sort();
 
           lis.forEach((el, i) => {
             if (i >= index[0] && i <= index[1]) el.classList.add('selected');
@@ -440,6 +440,7 @@ class DropBoxController {
 
       li.classList.toggle('selected');
       this.listFilesEl.dispatchEvent(this.onselectionchange);
+      return true;
     });
   }
 
@@ -447,8 +448,8 @@ class DropBoxController {
     this.getFirebaseRef().on('value', (snapshot) => {
       this.listFilesEl.innerHTML = '';
       snapshot.forEach((snapshotItem) => {
-        let key = snapshotItem.key;
-        let data = snapshotItem.val();
+        const {key} = snapshotItem;
+        const data = snapshotItem.val();
         this.listFilesEl.appendChild(this.getFileView(data, key));
       });
     });
