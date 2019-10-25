@@ -23,18 +23,16 @@ class DropBoxController {
   connectFirebase() {
     // Your web app's Firebase configuration
     const firebaseConfig = {
-      apiKey: 'AIzaSyAIOEmmPd9U117m4NqTDBaemICc4_R2UNI',
-      authDomain: 'dropbox-clone-2f9d6.firebaseapp.com',
-      databaseURL: 'https://dropbox-clone-2f9d6.firebaseio.com',
-      projectId: 'dropbox-clone-2f9d6',
-      storageBucket: 'dropbox-clone-2f9d6.appspot.com',
-      messagingSenderId: '647693228515',
-      appId: '1:647693228515:web:bef02cd91ce220ea85e8d6',
-      measurementId: 'G-N6LGFTL885',
+      apiKey: 'AIzaSyBx1h6DR9ikKrwwTUeFZmX_YY7Nb5ZJ-gE',
+      authDomain: 'dropbox-clone-99e1f.firebaseapp.com',
+      databaseURL: 'https://dropbox-clone-99e1f.firebaseio.com',
+      projectId: 'dropbox-clone-99e1f',
+      storageBucket: 'dropbox-clone-99e1f.appspot.com',
+      messagingSenderId: '818777424432',
+      appId: '1:818777424432:web:5d0ffaae2c3c08d420e3f5',
     };
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
-    // firebase.analytics();
   }
 
   getSelection() {
@@ -196,54 +194,74 @@ class DropBoxController {
   uploadTask(files) {
     const promises = [];
     [...files].forEach((file) => {
-      // promises.push(
-      //   new Promise((resolve, reject) => {
-      //     // upload arquivos usando storage via firebase
-
-      //     const fileRef = firebase
-      //       .storage()
-      //       .ref(this.currentFolder.join('/'))
-      //       .child(file.name);
-      //     // const fileRef = firebase.storage().ref(this.currentFolder.join('/')).child(file.name);
-
-      //     const task = fileRef.put(file);
-      //     task.on(
-      //       'state_changed',
-      //       (snapshot) => {
-      //         console.log('progress', snapshot);
-      //       },
-      //       (error) => {
-      //         console.error(error);
-      //         reject(error);
-      //       },
-      //       (snapshot) => {
-      //         console.log('sucesss', snapshot);
-      //         resolve();
-      //       }
-      //     );
-      //   })
-      // );
-
-      const formData = new FormData();
-
-      formData.append('input-file', file);
-
       promises.push(
-        this.ajax(
-          '/upload',
-          'POST',
-          formData,
-          () => {
-            this.uploadProgress(event, file);
-          },
-          () => {
-            this.startUploadTime = Date.now();
-          }
-        )
+        new Promise((resolve, reject) => {
+          // upload arquivos usando storage via firebase
+
+          const fileRef = firebase
+            .storage()
+            .ref(this.currentFolder.join('/'))
+            .child(file.name);
+
+          const task = fileRef.put(file);
+          task.on(
+            'state_changed',
+            (snapshot) => {
+              console.log('progress', snapshot);
+
+              // this.uploadProgress(
+              //   {
+              //     loaded: snapshot.bytesTransferred,
+              //     total: snapshot.totalBytes,
+              //   },
+              //   file
+              // );
+            },
+            (error) => {
+              console.error(error);
+              reject(error);
+            },
+            (snapshot) => {
+              console.log('success', snapshot);
+              resolve();
+
+              // () => {
+              //   fileRef
+              //     .getMetadata()
+              //     .then((metadata) => {
+              //       resolve(metadata);
+              //     })
+              //     .catch((err) => {
+              //       reject(err);
+              //     });
+            }
+          );
+        })
       );
     });
 
     return Promise.all(promises);
+
+    //   const formData = new FormData();
+
+    //   formData.append('input-file', file);
+
+    //   promises.push(
+    //     this.ajax(
+    //       '/upload',
+    //       'POST',
+    //       formData,
+    //       () => {
+    //         this.uploadProgress(event, file);
+    //       },
+    //       () => {
+    //         this.startUploadTime = Date.now();
+    //       }
+    //     )
+    //   );
+    // });
+
+    // return Promise.all(promises);
   }
 
   uploadProgress(event, file) {
@@ -507,8 +525,7 @@ class DropBoxController {
           this.openFolder();
           break;
         default:
-          window.open(file.path);
-        // window.open(`/file?path=${file.path}`);
+          window.open(`/file?path=${file.path}`);
       }
     });
 
