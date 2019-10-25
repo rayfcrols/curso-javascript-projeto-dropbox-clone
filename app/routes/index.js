@@ -22,6 +22,26 @@ router.post('/upload', (req, res) => {
   });
 });
 
+router.get('/file', (req, res) => {
+  const path = `./${req.query.path}`;
+  if (fs.existsSync(path)) {
+    fs.readFile(path, (err, data) => {
+      if (err) {
+        console.error(err);
+        res.status(400).json({
+          error: err,
+        });
+      } else {
+        res.status(200).end(data);
+      }
+    });
+  } else {
+    res.status(404).json({
+      error: 'File not found.',
+    });
+  }
+});
+
 /* DELETE home page. */
 router.delete('/file', (req, res) => {
   const form = new formidable.IncomingForm({
@@ -39,6 +59,10 @@ router.delete('/file', (req, res) => {
         } else {
           res.json({fields});
         }
+      });
+    } else {
+      res.status(404).json({
+        error: 'File not found.',
       });
     }
   });

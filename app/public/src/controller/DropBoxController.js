@@ -1,5 +1,7 @@
 class DropBoxController {
   constructor() {
+    this.currentFolder = ['Home'];
+
     this.onselectionchange = new Event('selectionchange');
     this.btnSendFileEl = document.querySelector('#btn-send-file');
     this.inputFilesEl = document.querySelector('#files');
@@ -11,26 +13,27 @@ class DropBoxController {
     this.btnNewFolder = document.querySelector('#btn-new-folder');
     this.btnRename = document.querySelector('#btn-rename');
     this.btnDelete = document.querySelector('#btn-delete');
+    this.navEl = document.querySelector('#browse-location');
 
     this.connectFirebase();
     this.initEvents();
-    this.readFiles();
+    this.openFolder();
   }
 
   connectFirebase() {
     // Your web app's Firebase configuration
-    const config = {
+    const firebaseConfig = {
       apiKey: 'AIzaSyAIOEmmPd9U117m4NqTDBaemICc4_R2UNI',
       authDomain: 'dropbox-clone-2f9d6.firebaseapp.com',
       databaseURL: 'https://dropbox-clone-2f9d6.firebaseio.com',
       projectId: 'dropbox-clone-2f9d6',
-      storageBucket: '',
+      storageBucket: 'dropbox-clone-2f9d6.appspot.com',
       messagingSenderId: '647693228515',
-      appId: '1:647693228515:web:083399c49eea632d85e8d6',
-      measurementId: 'G-ZNP7X7LQ9W',
+      appId: '1:647693228515:web:bef02cd91ce220ea85e8d6',
+      measurementId: 'G-N6LGFTL885',
     };
     // Initialize Firebase
-    firebase.initializeApp(config);
+    firebase.initializeApp(firebaseConfig);
     // firebase.analytics();
   }
 
@@ -55,6 +58,20 @@ class DropBoxController {
   }
 
   initEvents() {
+    this.btnNewFolder.addEventListener('click', (e) => {
+      const name = prompt('Nome da nova pasta:');
+
+      if (name) {
+        this.getFirebaseRef()
+          .push()
+          .set({
+            name,
+            type: 'folder',
+            path: this.currentFolder.join('/'),
+          });
+      }
+    });
+
     this.btnDelete.addEventListener('click', (e) => {
       this.removeTask()
         .then((responses) => {
@@ -132,8 +149,9 @@ class DropBoxController {
     this.btnSendFileEl.disabled = false;
   }
 
-  getFirebaseRef() {
-    return firebase.database().ref('files');
+  getFirebaseRef(path) {
+    if (!path) path = this.currentFolder.join('/');
+    return firebase.database().ref(path);
   }
 
   modalShow(show = true) {
@@ -178,6 +196,34 @@ class DropBoxController {
   uploadTask(files) {
     const promises = [];
     [...files].forEach((file) => {
+      // promises.push(
+      //   new Promise((resolve, reject) => {
+      //     // upload arquivos usando storage via firebase
+
+      //     const fileRef = firebase
+      //       .storage()
+      //       .ref(this.currentFolder.join('/'))
+      //       .child(file.name);
+      //     // const fileRef = firebase.storage().ref(this.currentFolder.join('/')).child(file.name);
+
+      //     const task = fileRef.put(file);
+      //     task.on(
+      //       'state_changed',
+      //       (snapshot) => {
+      //         console.log('progress', snapshot);
+      //       },
+      //       (error) => {
+      //         console.error(error);
+      //         reject(error);
+      //       },
+      //       (snapshot) => {
+      //         console.log('sucesss', snapshot);
+      //         resolve();
+      //       }
+      //     );
+      //   })
+      // );
+
       const formData = new FormData();
 
       formData.append('input-file', file);
@@ -272,6 +318,7 @@ class DropBoxController {
               </svg>`;
         break;
       case 'audio/ogg':
+      case 'audio/mp3':
       case 'audio/mpeg':
       case 'audio/x-wav':
         return `<svg width="160" height="160" viewBox="0 0 160 160" class="mc-icon-template-content tile__preview tile__preview--icon">
@@ -405,7 +452,66 @@ class DropBoxController {
     return li;
   }
 
+  openFolder() {
+    if (this.lastFolder) this.getFirebaseRef(this.lastFolder).off('value');
+    this.renderNav();
+    this.readFiles();
+  }
+
+  renderNav() {
+    const nav = document.createElement('nav');
+    const path = [];
+
+    for (let i = 0; i < this.currentFolder.length; i++) {
+      const folderName = this.currentFolder[i];
+      const span = document.createElement('span');
+
+      path.push(folderName);
+
+      if (i + 1 === this.currentFolder.length) {
+        span.innerHTML = folderName;
+      } else {
+        span.className = 'breadcrumb-segment__wrapper';
+        span.innerHTML = `
+            <span class="ue-effect-container uee-BreadCrumbSegment-link-0">
+                <a href="#" data-path='${path.join('/')}' class="breadcrumb-segment">${folderName}</a>
+            </span>
+            <svg width="24" height="24" viewBox="0 0 24 24" class="mc-icon-template-stateless" style="position: relative;">
+                <title>arrow-right</title>
+                <path d="M10.414 7.05l4.95 4.95-4.95 4.95L9 15.534 12.536 12 9 8.464z" fill="#637282" fill-rule="evenodd"></path>
+            </svg>
+            `;
+      }
+      nav.appendChild(span);
+    }
+
+    this.navEl.innerHTML = nav.innerHTML;
+
+    this.navEl.querySelectorAll('a').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        this.currentFolder = a.dataset.path.split('/');
+        this.openFolder();
+      });
+    });
+  }
+
   initEventsLi(li) {
+    li.addEventListener('dblclick', (e) => {
+      const file = JSON.parse(li.dataset.file);
+
+      switch (file.type) {
+        case 'folder':
+          this.currentFolder.push(file.name);
+          this.openFolder();
+          break;
+        default:
+          window.open(file.path);
+        // window.open(`/file?path=${file.path}`);
+      }
+    });
+
     li.addEventListener('click', (e) => {
       if (e.shiftKey) {
         const firstLi = this.listFilesEl.querySelector('li.selected');
@@ -443,12 +549,17 @@ class DropBoxController {
   }
 
   readFiles() {
+    this.lastFolder = this.currentFolder.join('/');
+
     this.getFirebaseRef().on('value', (snapshot) => {
       this.listFilesEl.innerHTML = '';
       snapshot.forEach((snapshotItem) => {
         const {key} = snapshotItem;
         const data = snapshotItem.val();
-        this.listFilesEl.appendChild(this.getFileView(data, key));
+
+        if (data.type) {
+          this.listFilesEl.appendChild(this.getFileView(data, key));
+        }
       });
     });
   }
